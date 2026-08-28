@@ -1614,42 +1614,44 @@
 
   /* ============ MÜKELLEFİYET SORGULA — BEKLEYEN EVA ============ */
   .mukellefiyet-wait-avatar{
-    position:fixed; z-index:270; display:flex; flex-direction:column; align-items:center; gap:8px;
-    width:64px; touch-action:none;
+    position:fixed; z-index:270; display:flex; flex-direction:column; align-items:center; gap:12px;
+    width:92px; touch-action:none;
   }
   .mukellefiyet-wait-char{
-    width:58px; height:58px; border-radius:50%; flex-shrink:0; cursor:grab;
+    width:86px; height:86px; border-radius:50%; flex-shrink:0; cursor:grab;
     background:linear-gradient(160deg, #ede9fe, #ddd6fe);
-    box-shadow:0 8px 22px rgba(124,58,237,0.32), 0 0 0 3px #fff;
+    box-shadow:0 12px 30px rgba(124,58,237,0.42), 0 0 0 5px #fff;
     display:flex; align-items:center; justify-content:center;
   }
   .mukellefiyet-wait-char:active{ cursor:grabbing; }
-  .mukellefiyet-wait-char svg{ width:44px; height:44px; }
+  .mukellefiyet-wait-char svg{ width:66px; height:66px; }
   .mukellefiyet-wait-bubble{
-    background:#fff; border:1px solid var(--card-border); border-radius:12px;
-    box-shadow:0 12px 30px rgba(30,20,50,0.22); padding:10px 12px;
-    font-size:12px; color:var(--text); text-align:center; line-height:1.4;
-    width:180px; pointer-events:none;
+    background:#fff; border:1px solid var(--card-border); border-radius:14px;
+    box-shadow:0 16px 38px rgba(30,20,50,0.3); padding:14px 16px;
+    font-size:15px; font-weight:600; color:var(--text); text-align:center; line-height:1.45;
+    width:250px; pointer-events:none;
   }
   [data-theme="dark"] .mukellefiyet-wait-bubble{ background:var(--card-bg); border-color:var(--card-border); color:var(--text); }
 
   /* "Cin" gibi belirme/kaybolma animasyonu — tıklanan noktadan büyüyerek,
-     hafif dönerek ve dalgalanarak çıkar; kaybolurken tam tersini yapar. */
+     hafif dönerek ve dalgalanarak çıkar; kaybolurken tam tersini yapar.
+     Netlik için bulanıklık (blur) kaldırıldı — sadece boyut/dönüş/konum
+     değişiyor, metin ve avatar her an keskin kalıyor. */
   .mukellefiyet-wait-avatar.genie-in{
-    animation: mwGenieIn 0.6s cubic-bezier(.2,1.4,.4,1) both;
+    animation: mwGenieIn 0.7s cubic-bezier(.2,1.4,.4,1) both;
   }
   .mukellefiyet-wait-avatar.genie-out{
-    animation: mwGenieOut 0.45s cubic-bezier(.5,-0.2,.7,0) both;
+    animation: mwGenieOut 0.4s cubic-bezier(.5,-0.2,.7,0) both;
   }
   @keyframes mwGenieIn{
-    0%{ transform:scale(0.05) translateY(30px) rotate(-25deg) skewX(15deg); opacity:0; filter:blur(3px); }
-    55%{ transform:scale(1.15) translateY(-8px) rotate(6deg) skewX(-4deg); opacity:1; filter:blur(0); }
-    75%{ transform:scale(0.94) translateY(2px) rotate(-2deg) skewX(1deg); }
+    0%{ transform:scale(0.05) translateY(30px) rotate(-25deg) skewX(15deg); opacity:0; }
+    55%{ transform:scale(1.12) translateY(-8px) rotate(6deg) skewX(-4deg); opacity:1; }
+    75%{ transform:scale(0.96) translateY(2px) rotate(-2deg) skewX(1deg); }
     100%{ transform:scale(1) translateY(0) rotate(0deg) skewX(0deg); opacity:1; }
   }
   @keyframes mwGenieOut{
-    0%{ transform:scale(1) translateY(0) rotate(0deg) skewX(0deg); opacity:1; filter:blur(0); }
-    100%{ transform:scale(0.05) translateY(30px) rotate(25deg) skewX(15deg); opacity:0; filter:blur(3px); }
+    0%{ transform:scale(1) translateY(0) rotate(0deg) skewX(0deg); opacity:1; }
+    100%{ transform:scale(0.05) translateY(30px) rotate(25deg) skewX(15deg); opacity:0; }
   }
 </style>
 </head>
@@ -5827,35 +5829,51 @@ function showMukellefiyetWaitAvatar(clickEvent, url){
   if(mukellefiyetWaitPollTimer){ clearInterval(mukellefiyetWaitPollTimer); mukellefiyetWaitPollTimer = null; }
   wrap.classList.remove("genie-in", "genie-out");
 
-  const rect = clickEvent.target.closest("button").getBoundingClientRect();
-  const startLeft = rect.left + rect.width/2 - 32;
-  const startTop = rect.top + rect.height/2 - 20;
-  wrap.style.left = startLeft + "px";
-  wrap.style.top = startTop + "px";
-  wrap.style.transformOrigin = "top left";
   bubble.textContent = "Mükellefiyet Sorgulama İşlemi İçin İlgili Sayfaya Yönlendiriliyorsunuz..";
-
   wrap.style.display = "flex";
+  wrap.style.transformOrigin = "center center";
+
+  // Ekranın tam ortasında belirsin (tıklanan yerden değil). Önce görünür
+  // yapıp gerçek boyutunu ölçtükten sonra ortalıyoruz — böylece balon
+  // metninin uzunluğuna göre kutu boyu değişse bile ortalama her zaman doğru olur.
+  const wrapWidth = wrap.offsetWidth || 92;
+  const wrapHeight = wrap.offsetHeight || 180;
+  wrap.style.left = (window.innerWidth/2 - wrapWidth/2) + "px";
+  wrap.style.top = (window.innerHeight/2 - wrapHeight/2) + "px";
+
   void wrap.offsetWidth; // reflow — animasyon her seferinde yeniden oynasın
   wrap.classList.add("genie-in");
 
-  const newTab = window.open(url, "_blank", "noopener");
-  if(!newTab){
-    // Açılır pencere engellenmiş olabilir — yine de kullanıcıyı bilgilendirip bekleyen Eva'yı kaldır
-    showCenterToast("Yeni sekme açılamadı. Tarayıcınızın açılır pencere engelleyicisini kontrol edin.", "⚠️");
-    hideMukellefiyetWaitAvatar();
-    return;
-  }
-
-  // Sekmenin kapanıp kapanmadığını güvenli şekilde (aynı-köken kısıtlamasına
-  // takılmadan) düzenli aralıklarla kontrol ediyoruz — bu, tarayıcıların
-  // izin verdiği standart bir yöntemdir.
-  mukellefiyetWaitPollTimer = setInterval(()=>{
-    if(newTab.closed){
-      clearInterval(mukellefiyetWaitPollTimer);
-      mukellefiyetWaitPollTimer = null;
+  // ÖNEMLİ: Yeni sekmeyi HEMEN açmıyoruz — çünkü yeni sekme açılır açılmaz
+  // tarayıcının odağı anında oraya kayıyor ve kullanıcı bu ekrandaki "cin"
+  // animasyonunu görmeden kaçırıyordu. Bunun yerine, animasyonun oynaması
+  // için kısa bir süre (600ms — animasyon süresiyle aynı) bekliyoruz.
+  // Tarayıcılar, bir tıklamadan sonraki ~1 saniye içinde açılan pencereleri
+  // hâlâ "kullanıcı başlatmış" sayıp engellemediği için bu güvenlidir.
+  const shownAt = Date.now();
+  const MIN_VISIBLE_MS = 8000; // en az 8 saniye ekranda kalır, sekme hemen kapansa bile
+  setTimeout(()=>{
+    const newTab = window.open(url, "_blank", "noopener");
+    if(!newTab){
+      // Açılır pencere engellenmiş olabilir — yine de kullanıcıyı bilgilendirip bekleyen Eva'yı kaldır
+      showCenterToast("Yeni sekme açılamadı. Tarayıcınızın açılır pencere engelleyicisini kontrol edin.", "⚠️");
       hideMukellefiyetWaitAvatar();
+      return;
     }
+
+    // Sekmenin kapanıp kapanmadığını güvenli şekilde (aynı-köken kısıtlamasına
+    // takılmadan) düzenli aralıklarla kontrol ediyoruz. Sekme kapansa BİLE,
+    // Eva en az MIN_VISIBLE_MS süresince ekranda kalır — çok hızlı kapanıp
+    // kaybolmasın diye.
+    mukellefiyetWaitPollTimer = setInterval(()=>{
+      if(newTab.closed){
+        const elapsed = Date.now() - shownAt;
+        if(elapsed < MIN_VISIBLE_MS) return; // henüz minimum süre dolmadı, beklemeye devam
+        clearInterval(mukellefiyetWaitPollTimer);
+        mukellefiyetWaitPollTimer = null;
+        hideMukellefiyetWaitAvatar();
+      }
+    }, 400);
   }, 600);
 }
 function hideMukellefiyetWaitAvatar(){
