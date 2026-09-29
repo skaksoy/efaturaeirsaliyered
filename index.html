@@ -4471,16 +4471,37 @@ function createInvoicePanel(ids){
   function buildLocalSummaryChunks(){
     const chunks = knowledgeStores[ids.kbCategory] || [];
     const senaryoVal = ids.senaryo && document.getElementById(ids.senaryo) ? document.getElementById(ids.senaryo).value : "";
-    if(!senaryoVal) return { chunks, matchedBySenaryo: false };
-    const target = normalizeForMatch(senaryoVal);
-    const matched = chunks.filter(c=>{
-      const headingMatch = c.match(/^([^:]{2,40}):\s*(.+)$/);
-      if(headingMatch){
-        return normalizeForMatch(headingMatch[1]).includes(target);
-      }
-      return normalizeForMatch(c).includes(target);
+    const tipVal = ids.tip && document.getElementById(ids.tip) ? document.getElementById(ids.tip).value : "";
+
+    function matchByTarget(list, rawTarget){
+      const target = normalizeForMatch(rawTarget);
+      if(!target) return [];
+      return list.filter(c=>{
+        const headingMatch = c.match(/^([^:]{2,40}):\s*(.+)$/);
+        if(headingMatch){
+          return normalizeForMatch(headingMatch[1]).includes(target);
+        }
+        return normalizeForMatch(c).includes(target);
+      });
+    }
+
+    // Senaryo (Temel/Ticari/E-Arşiv) ile eşleşen kayıtlar.
+    const senaryoMatches = senaryoVal ? matchByTarget(chunks, senaryoVal) : [];
+    // Fatura Tipi (Tevkifat, İhracat, İade vb.) ile eşleşen kayıtlar — bunlar
+    // Senaryo'dan BAĞIMSIZ ayrı bir boyuttur (örn. "Temel Fatura" senaryosunda
+    // kesilmiş bir Tevkifatlı fatura hakkında soru sorulunca, hem Temel Fatura
+    // hem de Tevkifat'a özel bilgiler birlikte gönderilmeli).
+    const tipMatches = tipVal ? matchByTarget(chunks, tipVal) : [];
+
+    // İkisini birleştirip (tekrarları kaldırarak) döndürüyoruz.
+    const combined = [];
+    const seen = new Set();
+    [...senaryoMatches, ...tipMatches].forEach(c=>{
+      if(!seen.has(c)){ seen.add(c); combined.push(c); }
     });
-    return matched.length > 0 ? { chunks: matched, matchedBySenaryo: true } : { chunks, matchedBySenaryo: false };
+
+    if(combined.length > 0) return { chunks: combined, matchedBySenaryo: true };
+    return { chunks, matchedBySenaryo: false };
   }
 
   /* "Etiket: açıklama" formatındaki kayıtları aynı etiket altında gruplar.
