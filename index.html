@@ -1521,6 +1521,10 @@
     0%, 100%{ transform:translateY(0); }
     50%{ transform:translateY(-5px); }
   }
+  /* Programın adını gösteren karşılama başlığı — VARSAYILAN OLARAK HER
+     ZAMAN gizli (masaüstünde asla görünmez); yalnızca aşağıdaki mobil
+     medya sorgusunda, widget açıkken yeniden gösterilir. */
+  .avatar-greeting-title{ display:none; }
   /* Avatar+menü açıkken (yalnızca mobilde, aşağıdaki medya sorgusunda
      ".visible" ile etkinleşir) arkadaki formu tamamen gizleyen perde.
      Varsayılan olarak HER ZAMAN gizli — masaüstünde hiç görünmez.
@@ -1666,9 +1670,10 @@
     .avatar-widget.open .avatar-char-btn svg{ width:74px; height:74px; }
     /* Balonun hemen altında beliren program adı — sadece mobil karşılama
        ekranında görünür, avatar+balon açıldıktan kısa süre sonra,
-       yumuşak bir "yukarı süzülerek belirme" animasyonuyla gelir. */
+       yumuşak bir "yukarı süzülerek belirme" animasyonuyla gelir.
+       (Varsayılan gizli kural artık aşağıda, medya sorgusu DIŞINDA —
+       böylece masaüstünde de her zaman gizli kalır.) */
     .avatar-greeting-title{
-      display:none;
       margin-top:16px; text-align:center; font-weight:800; font-size:15px;
       color:var(--purple-dim); text-shadow:0 2px 12px rgba(124,58,237,0.35);
       opacity:0; transform:translateY(10px);
@@ -2845,6 +2850,24 @@ e.exports=function(e){return null!=e&&null!=e.constructor&&"function"==typeof e.
     </svg>
   </button>
 </div>
+<!-- ÖNEMLİ — GERÇEK ANINDA AÇILIŞ: Bu küçük script, sayfanın en altındaki
+     ana script bloğu (~6500 satır sonra) daha çalışmadan, tarayıcı bu
+     noktayı ayrıştırır ayrıştırmaz hemen çalışır. Böylece Eva'nın ekranı,
+     dosyanın geri kalanının (büyük kütüphaneler dahil) yüklenmesini
+     beklemeden, gerçekten en erken anda belirir — mobil cihazlarda
+     hissedilen "önce form, sonra Eva" gecikmesini ortadan kaldırır. Ana
+     script daha sonra çalıştığında aynı sınıfları tekrar eklemeye çalışır;
+     bu zararsızdır (sınıf zaten varsa hiçbir şey değişmez). */
+<script>
+(function(){
+  var w = document.getElementById("avatarWidget");
+  var b = document.getElementById("avatarBackdrop");
+  var c = document.getElementById("avatarCharBtn");
+  if(c) c.classList.add("entrance");
+  if(w) w.classList.add("open");
+  if(b) b.classList.add("visible");
+})();
+</script>
 <div class="avatar-hand-cursor" id="avatarHandCursor">👆</div>
 
 <!-- ============ MÜKELLEFİYET SORGULA — BEKLEYEN EVA ============
