@@ -6501,7 +6501,12 @@ if(window.matchMedia("(max-width:860px)").matches){
       charBtn.removeEventListener("animationend", onEntranceEnd);
     }
   });
-  setTimeout(openBubble, 1150);
+  // ÖNEMLİ: Eskiden burada ~1.1 saniyelik bir gecikme vardı (karakterin
+  // giriş animasyonunun bitmesini bekliyordu) — bu süre boyunca kullanıcı
+  // önce çıplak fatura ekranını görüyor, ardından Eva'nın ekranı üzerine
+  // düşüyordu. Artık gecikme kaldırıldı: sayfa açılır açılmaz Eva'nın
+  // karşılama ekranı (mobilde arka planı da kaplayarak) hemen beliriyor.
+  openBubble();
 })();
 
 </script>
